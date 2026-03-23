@@ -16,6 +16,8 @@ FROM alpine:3.21
 
 WORKDIR /app
 
+ENV GATUS_CONFIG_PATH=/config/config.yaml
+
 COPY --from=builder /gatus /app/gatus 
 
 COPY app/gatus/config/config.yaml /config/config.yaml
