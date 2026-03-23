@@ -1,0 +1,11 @@
+.git
+.gitignore
+infra/
+bootstrap/
+.env
+README.md
+*.log
+.github/
+Dockerfile
+.dockerignore
+.DS_Store
