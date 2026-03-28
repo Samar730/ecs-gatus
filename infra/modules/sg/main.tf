@@ -12,7 +12,6 @@ resource "aws_security_group" "alb_sg" {
 resource "aws_vpc_security_group_ingress_rule" "http" {
     security_group_id = aws_security_group.alb_sg.id
     description = "Allow inbound HTTP (80) traffic" 
-
     cidr_ipv4 = "0.0.0.0/0"
     from_port = 80
     ip_protocol = "tcp"
@@ -22,7 +21,6 @@ resource "aws_vpc_security_group_ingress_rule" "http" {
 resource "aws_vpc_security_group_ingress_rule" "https" {
     security_group_id = aws_security_group.alb_sg.id
     description = "Allow inbound HTTPS (443) traffic"
-
     cidr_ipv4 = "0.0.0.0/0"
     from_port = 443
     ip_protocol = "tcp"
@@ -50,19 +48,15 @@ resource "aws_security_group" "ecs_sg" {
 resource "aws_vpc_security_group_ingress_rule" "ingress_from_alb" {
     security_group_id = aws_security_group.ecs_sg.id
     description = "Allow inbound traffic from ALB Security Group through port 8080"
-
-    cidr_ipv4 = "0.0.0.0/0"
     from_port = 8080
     ip_protocol = "tcp"
     to_port = 8080
-    
     referenced_security_group_id =aws_security_group.alb_sg.id
 }
 
 resource "aws_vpc_security_group_egress_rule" "egress_ecs_all" {
     security_group_id = aws_security_group.ecs_sg.id
     description = "Allow all outbound traffic"
-
     cidr_ipv4 = "0.0.0.0/0"
     ip_protocol = "-1"
 }
