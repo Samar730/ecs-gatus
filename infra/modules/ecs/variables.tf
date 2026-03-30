@@ -36,12 +36,29 @@ variable "container_definition_memory" {
     default = 512
 }
 
-variable "env_key" {
-    type = string
-    default = "GATUS_CONFIG_PATH"
+variable "retention_in_days" {
+    type = number
+    default = 7
 }
 
-variable "env_value" {
+variable "aws_region" {
     type = string
-    default = "/config/config.yaml"
+    default = "eu-west-2"
+}
+
+variable "desired_count" {
+    type = number
+    default = 2
+}
+
+variable "private_subnet_ids" {
+    type = list(string)
+}
+
+variable "ecs_sg" {
+    type = string
+}
+
+variable "target_group_arn" {
+    type = string
 }
