@@ -55,7 +55,7 @@ module "ecs" {
     task_memory = var.task_memory
     task_execution_role_arn = module.iam.ecs_task_execution_role_arn
     container_definition_name = var.container_definition_name
-    container_definition_image = var.container_definition_image
+    image_tag = var.image_tag
     container_definition_cpu = var.container_definition_cpu
     container_definition_memory = var.container_definition_memory
     retention_in_days = var.retention_in_days
