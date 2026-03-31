@@ -1,3 +1,8 @@
+# Data block to look up ECR URL
+data "aws_ecr_repository" "gatus" {
+  name = var.project_name
+}
+
 # Create ECS Cluster (Environment)
 resource "aws_ecs_cluster" "cluster" {
     name = "${var.project_name}-cluster"
@@ -20,11 +25,11 @@ resource "aws_ecs_task_definition" "task_definition" {
       container_definitions = jsonencode([
     {
       name      = var.container_definition_name
-      image     = var.container_definition_image
+      image     = "${data.aws_ecr_repository.gatus.repository_url}:${var.image_tag}"
       cpu       = var.container_definition_cpu
       memory    = var.container_definition_memory
       essential = true
-      readonlyRootFilesystem = true
+      readonlyRootFilesystem = false
 
       environment = [
   {

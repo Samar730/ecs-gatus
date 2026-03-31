@@ -22,8 +22,9 @@ variable "container_definition_name" {
     default = "gatus"
 }
 
-variable "container_definition_image" {
+variable "image_tag" {
     type = string
+    default = "latest"
 }
 
 variable "container_definition_cpu" {
