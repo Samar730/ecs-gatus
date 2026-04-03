@@ -20,7 +20,7 @@ ENV GATUS_CONFIG_PATH=/config/config.yaml
 
 COPY --from=builder /gatus /app/gatus 
 
-COPY app/gatus/config/config.yaml /config/config.yaml
+COPY app/gatus/config.yaml /config/config.yaml
 
 RUN adduser --disabled-password --no-create-home appuser
 
