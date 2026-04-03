@@ -29,3 +29,5 @@ USER appuser
 EXPOSE 8080
 
 CMD ["/app/gatus"]
+
+# Add comment to trigger pipeline for testing purposes 
