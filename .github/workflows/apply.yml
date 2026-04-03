@@ -1,0 +1,56 @@
+name: Terraform-apply
+
+on:
+  workflow_dispatch: # Continious Delivery rather than deployment so requires manual approval
+
+# Runner preparations
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false # waits for in-progress workflow to complete
+
+env:
+  AWS_REGION: eu-west-2
+  TF_VAR_image_tag: ${{ github.sha }}
+
+jobs:
+  Terraform-apply:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./infra
+
+    steps:
+      - name: Checkout Code 
+        uses: actions/checkout@v4
+        with: 
+          submodules: true
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform 
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.8
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform fmt
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate 
+
+      - name: Terraform Plan
+        run: terraform plan 
+
+      - name: Terraform Apply 
+        run: terraform apply -auto-approve -input=false
