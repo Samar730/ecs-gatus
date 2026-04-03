@@ -1,0 +1,64 @@
+name: Build, Scan and Push to ECR
+
+on: 
+  push:
+    branches:
+      - main
+    paths:
+      - "Dockerfile"
+      - "app/**"
+      - ".github/workflows/build.yml"
+
+# Runner Preparations
+permissions: 
+  id-token: write # needed for OIDC
+  contents: read # needed to checkout code
+
+concurrency: # Prevents 2 pipelines running simulataneously
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true # cancels any in-progress workflow when a new one starts
+
+env: # Using repeated code -> put into variables for DRY
+  AWS_REGION: eu-west-2
+  ECR_REPOSITORY: ecs-gatus
+  IMAGE_TAG: ${{ github.sha }}
+
+# Jobs & Steps 
+jobs:
+  Build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses:  aws-actions/configure-aws-credentials@v4
+        with: 
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+# Build Docker Image 
+      - name: Build Docker Image
+        id: build
+        run: | 
+          IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}"
+          docker build -t "$IMAGE" .
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+# Carry out Scanning for vulnerabilities
+      - name: Grype scan image (fail on HIGH/CRITICAL)
+        uses: anchore/scan-action@v7
+        with:
+          image: ${{ steps.build.outputs.image }}
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+
+# Pushing image to ECR
+      - name: Push image to ECR
+        run: docker push ${{ steps.build.outputs.image }}
