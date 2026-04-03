@@ -60,7 +60,7 @@ jobs:
           fail-build: true
           severity-cutoff: high
           only-fixed: true
-          grype-config: .grype.yaml
+          
 
 # Pushing image to ECR
       - name: Push image to ECR
