@@ -1,0 +1,3 @@
+ignore:
+  - vulnerability: GHSA-p77j-4mvh-x3m3
+    reason: "unfixable upstream dependency in Gatus submodule, no fix available in latest version"
