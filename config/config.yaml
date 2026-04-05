@@ -1,0 +1,45 @@
+endpoints:
+  - name: front-end
+    group: core
+    url: "https://twin.sh/health"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].status == UP"
+      - "[RESPONSE_TIME] < 150"
+
+  - name: back-end
+    group: core
+    url: "https://example.org/"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"
+
+  - name: monitoring
+    group: internal
+    url: "https://example.org/"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: github
+    url: "https://github.com"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 300"
+
+  - name: google
+    url: "https://google.com"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 300"
+
+  - name: cloudbysamar
+    url: "https://status.cloudbysamar.com"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 48h"

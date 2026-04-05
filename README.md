@@ -1,23 +1,14 @@
-# Gatus Health Monitoring — Deployed on AWS ECS Fargate
+# Gatus Health Monitoring App | Deployed on AWS ECS Fargate
 
 ## Introduction
-This project deploys Gatus — an open source health monitoring dashboard — onto 
-AWS ECS Fargate. Gatus continuously monitors configured endpoints and displays 
-their status in a clean dashboard, making it easy to see the health of your 
-services at a glance.
+This project deploys Gatus onto AWS ECS Fargate. Gatus is an open source health 
+monitoring dashboard that continuously monitors configured endpoints and displays 
+their status in real time.
 
 The infrastructure is fully provisioned using Terraform IaC across two 
 availability zones for high availability, with three GitHub Actions CI/CD 
 pipelines handling image builds, security scanning, and deployments. The 
 application is containerised using Docker and served securely over HTTPS.
-
-## What is Gatus?
-
-Gatus is an open source health monitoring tool written in Go. It continuously 
-monitors configured endpoints — HTTP, TCP, DNS, and more — and displays their 
-status on a clean dashboard. It supports alerting, response time tracking, and 
-status history, making it a lightweight alternative to more complex monitoring 
-solutions.
 
 In this project Gatus is configured to monitor external endpoints and display 
 their health status at status.cloudbysamar.com.
@@ -25,6 +16,10 @@ their health status at status.cloudbysamar.com.
 ## Architecture Diagram
 
 ![Architecture Diagram](docs/architecture-diagram.png)
+
+## App Demo
+
+![Demo](docs/demo.gif)
 
 ## Prerequisites
 
@@ -34,7 +29,45 @@ their health status at status.cloudbysamar.com.
 - AWS CLI configured
 - A registered domain managed via Route53
 - GitHub repository with the following secrets configured:
-  - `AWS_ROLE_TO_ASSUME` — IAM role ARN for GitHub Actions OIDC authentication
+  - `AWS_ROLE_TO_ASSUME`: IAM role ARN for GitHub Actions OIDC authentication
+
+## Project Structure
+```
+ecs-gatus/
+├── .github/
+│   └── workflows/
+│       ├── build.yml
+│       ├── apply.yml
+│       └── destroy.yml
+├── app/
+│   └── gatus/
+├── bootstrap/
+│   ├── main.tf
+│   ├── outputs.tf
+│   ├── variables.tf
+│   └── provider.tf
+├── config/
+│   └── config.yaml
+├── docs/
+├── infra/
+│   ├── modules/
+│   │   ├── vpc/
+│   │   ├── sg/
+│   │   ├── iam/
+│   │   ├── alb/
+│   │   ├── acm/
+│   │   ├── route53/
+│   │   └── ecs/
+│   ├── main.tf
+│   ├── variables.tf
+│   └── provider.tf
+├── .checkov.yaml
+├── .dockerignore
+├── .gitignore
+├── .grype.yaml
+├── Dockerfile
+└── README.md
+```
 
 ## Tech Stack
 
@@ -52,36 +85,22 @@ their health status at status.cloudbysamar.com.
 - Gatus (Go/Golang)
 - Docker (multi-stage build)
 
-## Project Overview
-
-This project demonstrates end-to-end infrastructure provisioning and deployment 
-automation on AWS, built across four phases:
-
-| Phase | Description | Status |
-|-------|-------------|--------|
-| 1 — Docker | Containerise Gatus and test locally | ✅ Complete |
-| 2 — ClickOps | Manual deployment via AWS console | ✅ Complete |
-| 3 — Terraform | Provision full infrastructure as code | ✅ Complete |
-| 4 — CI/CD | Automate builds and deployments via GitHub Actions | ✅ Complete |
-
 ## Architecture Overview
 
-User requests hit Route53 DNS which resolves status.cloudbysamar.com to the 
-ALB via an alias record. The ALB handles TLS termination using an ACM certificate 
-and forwards traffic to Gatus containers running on port 8080. All container 
-workloads run in private subnets across two availability zones, with the ALB as 
-the sole public entry point. A regional NAT Gateway handles outbound traffic from 
-the private subnets, allowing Gatus to reach external endpoints for health checks.
+- User requests hit Route53 which resolves status.cloudbysamar.com to the ALB via an alias record
+- The ALB handles TLS termination using an ACM certificate and forwards traffic to Gatus containers on port 8080
+- All workloads run in private subnets across two availability zones with the ALB as the only public entry point
+- A regional NAT Gateway handles outbound traffic from private subnets so Gatus can reach external endpoints for health checks
 
 ### Docker Design
 The Dockerfile uses a multi-stage build separating Go compilation from the Alpine runtime:
-- Reduces final image size by over 50%
+- Reduces final image size by over 65%
 - Removes build dependencies from the production image
 - Reduces attack surface with fewer packages
 - Container runs as a non-root user (appuser) limiting blast radius of any potential vulnerability
 
 ### Private ECS Workloads
-Placing ECS tasks in private subnets was a deliberate security decision:
+Placing ECS tasks in private subnets for security purposes:
 - Prevents direct internet access to containers
 - Forces all inbound traffic through the ALB
 - Aligns with AWS well-architected framework best practices
@@ -94,9 +113,9 @@ The ALB serves as the sole public entry point:
 
 ### Modular Terraform
 Infrastructure is split across seven modules (vpc, sg, iam, alb, acm, route53, ecs):
-- Each module owns a specific concern
+- Each module is responsible for one part of the infrastructure
 - Changes to one module don't affect others
-- Easier to maintain, extend and reason about
+- Remote State stored in S3 with State lock
 
 ### IAM & Least Privilege
 - ECS task execution role scoped to only the permissions required to pull images 
@@ -144,18 +163,25 @@ terraform apply
 
 ### 2. Configure GitHub Secrets
 Add the following secret to your GitHub repository:
-- `AWS_ROLE_TO_ASSUME` — IAM role ARN output from bootstrap
+- `AWS_ROLE_TO_ASSUME`: IAM role ARN output from bootstrap
 
 ### 3. Build and Deploy
 - Push a change to main to trigger the build pipeline automatically
 - Once build succeeds, trigger the apply pipeline manually via GitHub Actions
 - To tear down, trigger the destroy pipeline and type "destroy" to confirm
 
+## Lessons Learned
+- **OIDC Authentication**: More setup than static credentials but understanding the GitHub to AWS trust relationship made it worthwhile
+- **CI/CD Debugging**: Most failures came from local assumptions: wrong file paths, Go version mismatches, missing submodule registration
+- **Image Scanning**: CVEs appear faster than expected, maintaining a documented ignore file is an ongoing process not a one time setup
+- **Terraform Bootstrap**: Separating the state backend and OIDC setup into a bootstrap layer taught me why foundational infrastructure needs to exist before anything else can be automated
 
 ## Future Improvements
 
-- Replace the NAT Gateway with VPC endpoints for ECR and CloudWatch — the NAT 
+- Replace the NAT Gateway with VPC endpoints for ECR and CloudWatch as the NAT 
 Gateway is the most expensive component in this setup for what it actually does
 - Add AWS WAF to the ALB to protect against common web exploits
-- Enable VPC Flow Logs for network visibility and threat detection
-- Enable CloudWatch log encryption using KMS 
+- Implement blue/green or canary deployments via AWS CodeDeploy to reduce 
+deployment risk and enable zero-downtime releases
+- Introduce separate environments (dev, staging, production)
+- Centralised observability stack with Prometheus and Grafana for metrics, dashboards and alerting alongside CloudWatch
