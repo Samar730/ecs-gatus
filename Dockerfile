@@ -30,4 +30,4 @@ EXPOSE 8080
 
 CMD ["/app/gatus"]
 
-
+# Comment Just to trigger pipeline for README purposes
