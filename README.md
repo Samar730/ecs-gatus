@@ -5,6 +5,10 @@ This project deploys Gatus onto AWS ECS Fargate. Gatus is an open source health
 monitoring dashboard that continuously monitors configured endpoints and displays 
 their status in real time.
 
+## Architecture Diagram
+
+![Architecture Diagram](docs/architecture-diagram.png)
+
 The infrastructure is fully provisioned using Terraform IaC across two 
 availability zones for high availability, with three GitHub Actions CI/CD 
 pipelines handling image builds, security scanning, and deployments. The 
@@ -13,9 +17,7 @@ application is containerised using Docker and served securely over HTTPS.
 In this project Gatus is configured to monitor external endpoints and display 
 their health status at status.cloudbysamar.com.
 
-## Architecture Diagram
 
-![Architecture Diagram](docs/architecture-diagram.png)
 
 ## App Demo
 
