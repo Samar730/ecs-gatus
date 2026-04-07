@@ -186,4 +186,5 @@ Gateway is the most expensive component in this setup for what it actually does
 - Implement blue/green or canary deployments via AWS CodeDeploy to reduce 
 deployment risk and enable zero-downtime releases
 - Introduce separate environments (dev, staging, production)
+- Add branch protection rules on main to require pipeline success before merging
 - Centralised observability stack with Prometheus and Grafana for metrics, dashboards and alerting alongside CloudWatch
