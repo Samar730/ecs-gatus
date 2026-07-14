@@ -82,4 +82,10 @@ resource "aws_ecs_service" "ecs_service" {
       container_name   = var.container_definition_name
       container_port   = 8080
     }
+
+    # Ignore task definition changes to prevent Terraform from overwriting
+    # CI pipeline deployments with the original image tag on subsequent applies
+    lifecycle {
+    ignore_changes = [task_definition]
+  }
 }
